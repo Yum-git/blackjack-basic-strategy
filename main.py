@@ -5,8 +5,6 @@ D: ダブルダウン
 R: サレンダー
 """
 import random
-import sys
-import time
 
 basic_strategy = [
     ["H", "H", "H", "H", "H", "H", "H", "H", "H", "H"],
@@ -28,8 +26,12 @@ cards = [
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 ] * 6
 
+# カウンティング用カウンター
+count_counter = 0
+
 
 def card_list_count(card_list: list) -> int:
+    global count_counter
     card_count = 0
 
     card_list_sort = sorted(card_list, reverse=True)
@@ -45,10 +47,18 @@ def card_list_count(card_list: list) -> int:
         else:
             card_count += value
 
+        if value == 1 or value >= 10:
+            count_counter -= 1
+        elif value >= 7:
+            pass
+        else:
+            count_counter += 1
+
     return card_count
 
 
 def main():
+    global count_counter
     # 総収益
     total = 0
 
@@ -67,29 +77,27 @@ def main():
     card_ = random.sample(sum(cards, []), len(sum(cards, [])))
 
     for idx in range(100001):
-        # if idx % 10000 == 0 and idx != 0:
-        #     print("{}戦目：".format(idx + 1))
-        #     print("{} : {} : {}".format(player_win_count, tie_count, dealer_win_count))
-        #     print("勝率 : {}".format(player_win_count / sum([player_win_count, tie_count, dealer_win_count])))
-        #     print("勝ち額 ： {}".format(total))
-
         if idx != 0:
-            print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}   勝ち額 ： {}".format(
+            print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}   勝ち額 ： {}  カウンティング : {}".format(
                 idx+1,
                 player_win_count, tie_count, dealer_win_count,
                 player_win_count / sum([player_win_count, tie_count, dealer_win_count]),
-                total
+                total,
+                count_counter
             ), end='')
-            if idx <= 10:
-                time.sleep(0.5)
 
         # シャッフルする条件
         if len(sum(cards, [])) // 2 < card_cost_count:
             card_cost_count = 0
             card_ = random.sample(sum(cards, []), len(sum(cards, [])))
 
+            count_counter = 0
+
         # ベットする金
         bet = 1
+
+        if count_counter >= 30:
+            bet *= 2
 
         # ブラックジャックのフラグ
         blackjack_flag = False
@@ -139,8 +147,15 @@ def main():
                 basic_strategy_x_idx = 9
             basic_strategy_y_idx = dealer_open_card - 1
 
+            # 確率がずれすぎてif文で1から比較したい
+            # if basic_strategy_x_idx <= 8:
+            #     basic_strategy_x_idx = 0
+            # elif basic_strategy_x_idx == 9:
+            #     basic_strategy_x_idx = 1
+            # elif basic_strategy_x_idx == 10:
+            #     basic_strategy_x_idx = 2
+
             choice_strategy = basic_strategy[basic_strategy_x_idx][basic_strategy_y_idx]
-            # print(choice_strategy, player_count, "Dea:", dealer_open_card)
 
             if choice_strategy == "H":
                 # ヒット
@@ -196,11 +211,12 @@ def main():
             total += bet
             player_win_count += 1
         elif player_count == dealer_count:
-            total += 0
             tie_count += 1
-        else:
+        elif dealer_count > player_count:
             total -= bet
             dealer_win_count += 1
+        else:
+            pass
 
 
 if __name__ == '__main__':
