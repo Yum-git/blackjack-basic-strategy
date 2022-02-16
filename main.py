@@ -78,10 +78,12 @@ def main():
 
     for idx in range(100001):
         if idx != 0:
-            print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}   勝ち額 ： {}  カウンティング : {}".format(
+            print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}  引き分け率 ： {}   負率 : {}   勝ち額 ： {}  カウンティング : {}".format(
                 idx+1,
                 player_win_count, tie_count, dealer_win_count,
                 player_win_count / sum([player_win_count, tie_count, dealer_win_count]),
+                tie_count / sum([player_win_count, tie_count, dealer_win_count]),
+                dealer_win_count / sum([player_win_count, tie_count, dealer_win_count]),
                 total,
                 count_counter
             ), end='')
@@ -95,9 +97,6 @@ def main():
 
         # ベットする金
         bet = 1
-
-        if count_counter >= 30:
-            bet *= 2
 
         # ブラックジャックのフラグ
         blackjack_flag = False
@@ -121,17 +120,11 @@ def main():
 
         card_cost_count += 4
 
-        # ディーラーの数を確認
-        if dealer_card_list[0] == '1':
-            dealer_open_card = 1
-        elif dealer_card_list[0] >= 10:
-            dealer_open_card = 10
-        else:
-            dealer_open_card = dealer_card_list[0]
+        dealer_open_card = min(dealer_card_list[0], 10)
 
         # プレイヤーのヒットターン
         while True:
-            # プレイヤーの数をカウントする
+            # 自分の手札の合計をカウントする
             player_count = card_list_count(player_card_list)
 
             if player_count == 21 and len(player_card_list) == 2:
@@ -146,14 +139,6 @@ def main():
             elif basic_strategy_x_idx >= 9:
                 basic_strategy_x_idx = 9
             basic_strategy_y_idx = dealer_open_card - 1
-
-            # 確率がずれすぎてif文で1から比較したい
-            # if basic_strategy_x_idx <= 8:
-            #     basic_strategy_x_idx = 0
-            # elif basic_strategy_x_idx == 9:
-            #     basic_strategy_x_idx = 1
-            # elif basic_strategy_x_idx == 10:
-            #     basic_strategy_x_idx = 2
 
             choice_strategy = basic_strategy[basic_strategy_x_idx][basic_strategy_y_idx]
 
