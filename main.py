@@ -6,6 +6,9 @@ R: サレンダー
 """
 import random
 
+from module.count import card_list_count
+from module.strategy import split_strategy, hard_strategy, soft_strategy
+
 basic_strategy = [
     ["H", "H", "H", "H", "H", "H", "H", "H", "H", "H"],
     ["H", "H", "D", "D", "D", "D", "H", "H", "H", "H"],
@@ -30,33 +33,6 @@ cards = [
 count_counter = 0
 
 
-def card_list_count(card_list: list) -> int:
-    global count_counter
-    card_count = 0
-
-    card_list_sort = sorted(card_list, reverse=True)
-    # プレイヤーの数を確認
-    for value in card_list_sort:
-        if value >= 10:
-            card_count += 10
-        elif value == 1:
-            if card_count >= 11:
-                card_count += 1
-            else:
-                card_count += 11
-        else:
-            card_count += value
-
-        if value == 1 or value >= 10:
-            count_counter -= 1
-        elif value >= 7:
-            pass
-        else:
-            count_counter += 1
-
-    return card_count
-
-
 def main():
     global count_counter
     # 総収益
@@ -74,135 +50,162 @@ def main():
     # 引き分け数
     tie_count = 0
 
+    error_counter = 0
+
     card_ = random.sample(sum(cards, []), len(sum(cards, [])))
 
-    for idx in range(100001):
-        if idx != 0:
-            print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}  引き分け率 ： {}   負率 : {}   勝ち額 ： {}  カウンティング : {}".format(
-                idx+1,
-                player_win_count, tie_count, dealer_win_count,
-                player_win_count / sum([player_win_count, tie_count, dealer_win_count]),
-                tie_count / sum([player_win_count, tie_count, dealer_win_count]),
-                dealer_win_count / sum([player_win_count, tie_count, dealer_win_count]),
-                total,
-                count_counter
-            ), end='')
+    for idx in range(100000):
+        try:
+            if idx != 0:
+                print("\r{}戦目：   PlayerWin{} : Tie{} : DealerWin{}   勝率 : {}  引き分け率 ： {}   負率 : {}   勝ち額 ： {}  例外処理数 : {}".format(
+                    idx+1,
+                    player_win_count, tie_count, dealer_win_count,
+                    player_win_count / sum([player_win_count, tie_count, dealer_win_count]),
+                    tie_count / sum([player_win_count, tie_count, dealer_win_count]),
+                    dealer_win_count / sum([player_win_count, tie_count, dealer_win_count]),
+                    total,
+                    error_counter
+                ), end='')
 
-        # シャッフルする条件
-        if len(sum(cards, [])) // 2 < card_cost_count:
-            card_cost_count = 0
-            card_ = random.sample(sum(cards, []), len(sum(cards, [])))
+            # シャッフルする条件
+            if len(sum(cards, [])) // 2 < card_cost_count:
+                card_cost_count = 0
+                card_ = random.sample(sum(cards, []), len(sum(cards, [])))
 
-            count_counter = 0
+                count_counter = 0
 
-        # ベットする金
-        bet = 1
+            """-----------------------------"""
 
-        # ブラックジャックのフラグ
-        blackjack_flag = False
+            bj_flag = True
 
-        # サレンダーのフラグ
-        slender_flag = False
+            # プレイヤーの状態を示すリスト
+            player_information_list = []
+            # ディーラーの状態を示す辞書
+            dealer_information_dict = dict()
 
-        # ディーラーのカードリスト
-        dealer_card_list = []
+            # プレイヤーの状態にカードリストとベットをリスト内辞書に記載
+            player_information_list.append({
+                "card_list": [card_.pop(), card_.pop()],
+                "bet": 1,
+                "bj_flag": False,
+                "sur_flag": False
+            })
 
-        # プレイヤーのカードリスト
-        player_card_list = []
+            # ディーラーの状態にカードリストを記載
+            dealer_information_dict["card_list"] = [
+                card_.pop(), card_.pop()
+            ]
 
-        # ディーラーのカードを2枚引く　1枚目をオープンカードとする
-        dealer_card_list.append(card_.pop())
-        dealer_card_list.append(card_.pop())
+            card_cost_count += 4
 
-        # プレイヤーのカードを2枚引く
-        player_card_list.append(card_.pop())
-        player_card_list.append(card_.pop())
+            dealer_open_card = dealer_information_dict["card_list"][0]
 
-        card_cost_count += 4
+            # プレイヤーのターン
+            for index, player_information in enumerate(player_information_list):
+                # プレイヤー
+                while True:
+                    player_information = player_information_list[index]
+                    player_count = card_list_count(player_information["card_list"])
 
-        dealer_open_card = min(dealer_card_list[0], 10)
+                    if len(player_information["card_list"]) == 2:
+                        if player_count == 21:
+                            player_information["bet"] *= 1.5
+                            player_information["bj_flag"] = True
+                            break
+                        bj_flag = False
+                        if player_information["card_list"][0] == player_information["card_list"][1]:
+                            split_player_count = player_information["card_list"][0]
+                            choice_strategy = split_strategy(player_count=split_player_count, dealer_open_card=dealer_open_card)
+                        elif 1 in player_information["card_list"]:
+                            soft_player_count = player_count - 11
+                            choice_strategy = soft_strategy(player_count=soft_player_count, dealer_open_card=dealer_open_card)
+                        else:
+                            hard_player_count = player_count
+                            choice_strategy = hard_strategy(player_count=hard_player_count, dealer_open_card=dealer_open_card)
+                    else:
+                        hard_player_count = player_count
+                        choice_strategy = hard_strategy(player_count=hard_player_count, dealer_open_card=dealer_open_card)
 
-        # プレイヤーのヒットターン
-        while True:
-            # 自分の手札の合計をカウントする
-            player_count = card_list_count(player_card_list)
+                    match choice_strategy:
+                        case "H":
+                            player_information["card_list"].append(card_.pop())
+                            card_cost_count += 1
+                        case "S":
+                            break
+                        case "D":
+                            player_information["bet"] *= 2
+                            player_information["card_list"].append(card_.pop())
+                            card_cost_count += 1
+                            break
+                        case "R":
+                            player_information["bet"] /= 2
+                            player_information["sur_flag"] = True
+                            break
+                        case "P":
+                            player_information_list[index] = {
+                                "card_list": [player_information["card_list"][0], card_.pop()],
+                                "bet": 1,
+                                "bj_flag": False,
+                                "sur_flag": False
+                            }
+                            player_information_list.append(
+                                {
+                                    "card_list": [player_information["card_list"][0], card_.pop()],
+                                    "bet": 1,
+                                    "bj_flag": False,
+                                    "sur_flag": False
+                                }
+                            )
+                            card_cost_count += 2
+                        case _:
+                            raise Exception
 
-            if player_count == 21 and len(player_card_list) == 2:
-                blackjack_flag = True
-                bet *= 1.5
-                break
+            # ディーラーのターン
+            while True:
+                if bj_flag:
+                    break
+                else:
+                    dealer_count = card_list_count(card_list=dealer_information_dict["card_list"])
 
-            # ベージックストラテジーに沿って選択
-            basic_strategy_x_idx = player_count - 8
-            if basic_strategy_x_idx <= 0:
-                basic_strategy_x_idx = 0
-            elif basic_strategy_x_idx >= 9:
-                basic_strategy_x_idx = 9
-            basic_strategy_y_idx = dealer_open_card - 1
+                    if dealer_count < 17:
+                        dealer_information_dict["card_list"].append(card_.pop())
+                        card_cost_count += 1
+                    else:
+                        break
 
-            choice_strategy = basic_strategy[basic_strategy_x_idx][basic_strategy_y_idx]
 
-            if choice_strategy == "H":
-                # ヒット
-                player_card_list.append(card_.pop())
-                card_cost_count += 1
-            elif choice_strategy == "S":
-                # スタンド
-                break
-            elif choice_strategy == "D":
-                # ダブルダウン
-                bet *= 2
-                player_card_list.append(card_.pop())
-                card_cost_count += 1
-                break
-            elif choice_strategy == "R":
-                # サレンダー
-                bet /= 2
-                slender_flag = True
-                break
+            # 勝敗
+            dealer_count = card_list_count(card_list=dealer_information_dict["card_list"])
+            for player_information in player_information_list:
+                player_count = card_list_count(player_information["card_list"])
+                bet = player_information["bet"]
 
-        # ディーラーのヒットターン
-        while True:
-            # プレイヤーの数をカウントする
-            dealer_count = card_list_count(dealer_card_list)
+                player_sur_flag = player_information["sur_flag"]
+                player_bj_flag = player_information["bj_flag"]
 
-            if blackjack_flag and len(dealer_card_list) == 2 and dealer_count != 21:
-                break
-
-            if dealer_count < 17:
-                # ヒット
-                dealer_card_list.append(card_.pop())
-                card_cost_count += 1
-            elif 17 <= dealer_count:
-                break
-
-        # プレイヤーが21を超えているかどうか確認
-        # 超えていれば負けとして次のゲームへ
-        if card_list_count(player_card_list) > 21 or slender_flag:
-            total -= bet
-            dealer_win_count += 1
-            continue
-
-        # ディーラーが21を超えているかどうか確認
-        # 超えていれば負けとして次のゲームへ
-        if card_list_count(dealer_card_list) > 21:
-            total += bet
-            player_win_count += 1
-            continue
-
-        # 勝敗を決める
-        # プレイヤー > ディーラー　Win
-        if player_count > dealer_count:
-            total += bet
-            player_win_count += 1
-        elif player_count == dealer_count:
-            tie_count += 1
-        elif dealer_count > player_count:
-            total -= bet
-            dealer_win_count += 1
-        else:
-            pass
-
+                if player_count >= 22:
+                    dealer_win_count += 1
+                    total -= bet
+                elif player_sur_flag:
+                    dealer_win_count += 1
+                    total -= bet
+                elif dealer_count >= 22:
+                    player_win_count += 1
+                    total += bet
+                elif player_count > dealer_count:
+                    player_win_count += 1
+                    total += bet
+                elif player_count < dealer_count:
+                    dealer_win_count += 1
+                    total -= bet
+                elif player_count == dealer_count and player_bj_flag and len(dealer_information_dict["card_list"]) != 2:
+                    player_win_count += 1
+                    total += bet
+                else:
+                    tie_count += 1
+        except Exception:
+            error_counter += 1
 
 if __name__ == '__main__':
     main()
+
