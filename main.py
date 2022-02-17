@@ -1,26 +1,8 @@
-"""
-H: ヒット
-S: スタンド
-D: ダブルダウン
-R: サレンダー
-"""
 import random
 
 from module.count import card_list_count
 from module.strategy import split_strategy, hard_strategy, soft_strategy
 
-basic_strategy = [
-    ["H", "H", "H", "H", "H", "H", "H", "H", "H", "H"],
-    ["H", "H", "D", "D", "D", "D", "H", "H", "H", "H"],
-    ["H", "D", "D", "D", "D", "D", "D", "D", "D", "H"],
-    ["H", "D", "D", "D", "D", "D", "D", "D", "D", "D"],
-    ["H", "H", "H", "S", "S", "S", "H", "H", "H", "H"],
-    ["H", "S", "S", "S", "S", "S", "H", "H", "H", "H"],
-    ["H", "S", "S", "S", "S", "S", "H", "H", "H", "H"],
-    ["H", "S", "S", "S", "S", "S", "H", "H", "H", "R"],
-    ["R", "S", "S", "S", "S", "S", "H", "H", "R", "R"],
-    ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S"]
-]
 
 cards = [
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
