@@ -1,40 +1,39 @@
 import random
+import traceback
+from typing import List
 
 from module.count import card_list_count
 from module.strategy import split_strategy, hard_strategy, soft_strategy
 
 
-cards = [
+cards: List[List[int]] = [
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 ] * 6
 
-# カウンティング用カウンター
-count_counter = 0
-
 
 def main():
-    global count_counter
     # 総収益
-    total = 0
+    total: int = 0
 
     # 利用したカードの枚数
-    card_cost_count = 0
+    card_cost_count: int = 0
 
     # プレイヤー勝利数
-    player_win_count = 0
+    player_win_count: int = 0
 
     # ディーラー勝利数
-    dealer_win_count = 0
+    dealer_win_count: int = 0
 
     # 引き分け数
-    tie_count = 0
+    tie_count: int = 0
 
-    error_counter = 0
+    # エラー数（デバッグ用）
+    error_counter: int = 0
 
-    card_ = random.sample(sum(cards, []), len(sum(cards, [])))
+    card_: List[int] = random.sample(sum(cards, []), len(sum(cards, [])))
 
     for idx in range(100000):
         try:
@@ -54,16 +53,12 @@ def main():
                 card_cost_count = 0
                 card_ = random.sample(sum(cards, []), len(sum(cards, [])))
 
-                count_counter = 0
-
-            """-----------------------------"""
-
-            bj_flag = True
+            bj_flag: bool = True
 
             # プレイヤーの状態を示すリスト
-            player_information_list = []
+            player_information_list: list = []
             # ディーラーの状態を示す辞書
-            dealer_information_dict = dict()
+            dealer_information_dict: dict = dict()
 
             # プレイヤーの状態にカードリストとベットをリスト内辞書に記載
             player_information_list.append({
@@ -80,14 +75,14 @@ def main():
 
             card_cost_count += 4
 
-            dealer_open_card = dealer_information_dict["card_list"][0]
+            dealer_open_card: int = dealer_information_dict["card_list"][0]
 
             # プレイヤーのターン
             for index, player_information in enumerate(player_information_list):
                 # プレイヤー
                 while True:
                     player_information = player_information_list[index]
-                    player_count = card_list_count(player_information["card_list"])
+                    player_count: int = card_list_count(player_information["card_list"])
 
                     if len(player_information["card_list"]) == 2:
                         if player_count == 21:
@@ -147,7 +142,7 @@ def main():
                 if bj_flag:
                     break
                 else:
-                    dealer_count = card_list_count(card_list=dealer_information_dict["card_list"])
+                    dealer_count: int = card_list_count(card_list=dealer_information_dict["card_list"])
 
                     if dealer_count < 17:
                         dealer_information_dict["card_list"].append(card_.pop())
@@ -186,6 +181,7 @@ def main():
                 else:
                     tie_count += 1
         except Exception:
+            print(traceback.format_exc())
             error_counter += 1
 
 if __name__ == '__main__':
