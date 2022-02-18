@@ -103,6 +103,9 @@ def main():
                         hard_player_count = player_count
                         choice_strategy = hard_strategy(player_count=hard_player_count, dealer_open_card=dealer_open_card)
 
+                    if choice_strategy == "R" and len(player_information["card_list"]) > 2:
+                        choice_strategy = "H"
+
                     match choice_strategy:
                         case "H":
                             player_information["card_list"].append(card_.pop())
